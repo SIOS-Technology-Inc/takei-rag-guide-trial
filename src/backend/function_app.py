@@ -30,17 +30,11 @@ aoai_endpoint = os.environ["AOAI_ENDPOINT"]
 # 環境変数からこのチャットで今回利用するモデル名を取得する。
 gpt_model = os.environ["AOAI_MODEL"]
 
-# 環境変数からgtp-35-turboのデプロイ名を取得する。
-gpt_35_turbo_deploy = os.environ["AOAI_GPT_35_TURBO_DEPLOYMENT"]
+# 環境変数からgpt-4o-miniのデプロイ名を取得する。
+gpt_4o_mini_deploy = os.environ["AOAI_GPT_4O_MINI_DEPLOYMENT"]
 
-# 環境変数からgtp-4のデプロイ名を取得する。
-# gpt_4_deploy = os.environ["AOAI_GPT_4_DEPLOYMENT"]
-
-# 環境変数からgpt-4-32kのデプロイ名を取得する。
-# gpt_4_32k_deploy = os.environ["AOAI_GPT_4_32K_DEPLOYMENT"]
-
-# 環境変数からtext-embedding-ada-002のでデプロイ名を取得する。
-text_embedding_ada_002_deploy = os.environ["AOAI_TEXT_EMBEDDING_ADA_002_DEPLOYMENT"]
+# 環境変数からtext-embedding-3-smallのでデプロイ名を取得する。
+text_embedding_3_small_deploy = os.environ["AOAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT"]
 
 # 環境変数からAzure OpenAI ServiceのAPIのバージョンを取得する。
 api_version = os.environ["AOAI_API_VERSION"]
@@ -87,13 +81,13 @@ question: {query}
 # モデルごとのデプロイ名、最大トークン数、エンコーディングを定義する。
 # エンコーディングは、tiktokenライブラリを用いてモデルに応じたエンコーディングを利用して、トークン数を計算するために利用する。
 gpt_models = {
-    "gpt-35-turbo": {
-        "deployment": gpt_35_turbo_deploy,
-        "max_tokens": 4096,
-        "encoding": tiktoken.encoding_for_model("gpt-3.5-turbo")
+    "gpt-4o-mini": {
+        "deployment": gpt_4o_mini_deploy,
+        "max_tokens": 16384,
+        "encoding": tiktoken.encoding_for_model("gpt-4o-mini")
     },
-    "text-embedding-ada-002": {
-        "deployment": text_embedding_ada_002_deploy,
+    "text-embedding-3-small": {
+        "deployment": text_embedding_3_small_deploy,
         "max_tokens": 4096
     }
 }
@@ -137,7 +131,7 @@ def semantic_hybrid_search(query: str, history: list[dict]):
     # セマンティックハイブリッド検索に必要な「ベクトル化されたクエリ」「キーワード検索用クエリ」のうち、ベクトル化されたクエリを生成する。
     response = openai_client.embeddings.create(
         input = query,
-        model = text_embedding_ada_002_deploy
+        model = text_embedding_3_small_deploy
     )
     vector_query = VectorizedQuery(vector=response.data[0].embedding, k_nearest_neighbors=3, fields="contentVector")
 
