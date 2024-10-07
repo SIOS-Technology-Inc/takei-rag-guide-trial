@@ -8,16 +8,23 @@ from openai import AzureOpenAI
 from azure.search.documents.models import VectorizedQuery
 import argparse
 import glob
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from azure.core.credentials import AzureKeyCredential
+from dotenv import load_dotenv
 
-# 開発環境・本番環境でも同じ認証方式を使用するため、DefaultAzureCredentialを用いて認証情報を取得する。
-azure_credential = DefaultAzureCredential()
-token_provider = get_bearer_token_provider(
-    DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-)
+# .envファイルの内容を読み込見込む
+load_dotenv()
+
+# 環境変数から各API KEYを取得する
+aoai_api_key = os.environ["AOAI_API_KEY"]
+aisearch_api_key = os.environ["AISEARCH_API_KEY"]
+document_intelligence_api_key = os.environ["DOCUMENT_INTELLIGENCE_API_KEY"]
+
+# 環境変数に設定したAPI KEYから認証情報を取得する
+azure_credential_srch = AzureKeyCredential(aisearch_api_key)
+azure_credential_di = AzureKeyCredential(document_intelligence_api_key)
 
 # 環境変数からAzure AI Search、Azure OpenAI、Azure Document Intelligenceのエンドポイントを取得する
-search_service_endpoint = os.environ["SEARCH_SERVICE_ENDPOINT"]
+aisearch_endpoint = os.environ["AISEARCH_ENDPOINT"]
 aoai_endpoint = os.environ["AOAI_ENDPOINT"]
 aoai_api_version = os.environ["AOAI_API_VERSION"]
 document_intelligence_endpoint = os.environ["DOCUMENT_INTELLIGENCE_ENDPOINT"]
@@ -37,7 +44,7 @@ def create_index():
     """
     Azure AI Searchのインデックスを作成する
     """
-    client = SearchIndexClient(search_service_endpoint, azure_credential)
+    client = SearchIndexClient(aisearch_endpoint, azure_credential_srch)
     name = "docs"
 
     # すでにインデックスが作成済みである場合には何もしない
@@ -94,7 +101,7 @@ def delete_index():
     """
     Azure AI Searchのインデックスを削除する
     """
-    client = SearchIndexClient(search_service_endpoint, azure_credential)
+    client = SearchIndexClient(aisearch_endpoint, azure_credential_srch)
     client.delete_index('docs')
 
 def index_docs(chunks: list):
@@ -102,10 +109,10 @@ def index_docs(chunks: list):
     ドキュメントをAzure AI Searchにインデックスする
     """
     # Azure AI SearchのAPIに接続するためのクライアントを生成する
-    searchClient = SearchClient(search_service_endpoint, "docs", azure_credential)
+    searchClient = SearchClient(aisearch_endpoint, "docs", azure_credential_srch)
 
     # Azure OpenAIのAPIに接続するためのクライアントを生成する
-    openAIClient = AzureOpenAI(azure_endpoint=aoai_endpoint, azure_ad_token_provider=token_provider, api_version = aoai_api_version)
+    openAIClient = AzureOpenAI(azure_endpoint=aoai_endpoint, api_key=aoai_api_key, api_version = aoai_api_version)
 
 
     # chunksというリストに分割したテキストを格納しているので、それぞれのchunkに対してAzure OpenAIのテキスト埋め込みAPIを呼び出し、
@@ -114,7 +121,7 @@ def index_docs(chunks: list):
         print(f"{i+1}個目のチャンクを処理中...")
         response = openAIClient.embeddings.create(
             input = chunk,
-            model = "text-embedding-ada-002-deploy"
+            model = "text-embedding-3-small-deploy"
         )
 
         # チャンク化されたテキストとそのテキストのベクトルをAzure AI Searchにアップロードする
@@ -134,7 +141,7 @@ def extract_text_from_docs(filepath):
     ドキュメントからテキストを抽出する
     """
     # Azure Document IntelligenceのAPIに接続するためのクライアントを生成する
-    form_recognizer_client = DocumentAnalysisClient(endpoint=document_intelligence_endpoint, credential=azure_credential)
+    form_recognizer_client = DocumentAnalysisClient(endpoint=document_intelligence_endpoint, credential=azure_credential_di)
 
     # ドキュメントを読み込んで、Azure Document IntelligenceのAPIを呼び出して、テキストを抽出する
     print(f"{filepath}内のテキストを抽出中...")
