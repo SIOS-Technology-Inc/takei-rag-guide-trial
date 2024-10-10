@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# local.settings.jsonのテンプレートファイルを読み込み、src/backend/local.settings.jsonを作成する
+cat scripts/local.settings.json > ./src/backend/local.settings.json
+
 # フロントエンドで使用する.env.productionを作成
 echo 'VITE_API_ENDPOINT="your_static_web_apps_url"' > ./src/frontend/.env.production
 
