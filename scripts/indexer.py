@@ -19,6 +19,9 @@ aoai_api_key = os.environ["AOAI_API_KEY"]
 aisearch_api_key = os.environ["AISEARCH_API_KEY"]
 document_intelligence_api_key = os.environ["DOCUMENT_INTELLIGENCE_API_KEY"]
 
+# 環境変数からtext-embedding-3-smallのでデプロイ名を取得する。
+text_embedding_3_small_deploy = os.environ["AOAI_TEXT_EMBEDDING_3_SMALL_DEPLOYMENT"]
+
 # 環境変数に設定したAPI KEYから認証情報を取得する
 azure_credential_srch = AzureKeyCredential(aisearch_api_key)
 azure_credential_di = AzureKeyCredential(document_intelligence_api_key)
@@ -121,7 +124,7 @@ def index_docs(chunks: list):
         print(f"{i+1}個目のチャンクを処理中...")
         response = openAIClient.embeddings.create(
             input = chunk,
-            model = "text-embedding-3-small-deploy"
+            model = text_embedding_3_small_deploy
         )
 
         # チャンク化されたテキストとそのテキストのベクトルをAzure AI Searchにアップロードする
